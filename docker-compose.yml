@@ -1,0 +1,81 @@
+services:
+
+  api:
+    build: .
+    container_name: api_service
+
+    ports:
+      - "8000:8000"
+
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+
+  worker:
+    build: .
+    container_name: worker_service
+
+    command: python worker.py
+
+    depends_on:
+      - rabbitmq
+      - redis
+
+  db:
+    image: postgres:15
+
+    container_name: postgres_service
+
+    environment:
+      POSTGRES_DB: reservas
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7
+
+    container_name: redis_service
+
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+
+    container_name: rabbitmq_service
+
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  dozzle:
+    image: amir20/dozzle
+
+    container_name: dozzle_logs
+
+    ports:
+      - "9999:8080"
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  portainer:
+    image: portainer/portainer-ce
+
+    container_name: portainer_service
+
+    ports:
+      - "9000:9000"
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+
+volumes:
+  portainer_data:

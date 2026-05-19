@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: reservas
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:latest
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  worker:
+    build: .
+    command: python worker.py
+    depends_on:
+      - rabbitmq
